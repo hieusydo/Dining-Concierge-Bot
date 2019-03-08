@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dining Concierge Bot</title>
+
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apigClient.js"></script>
+    <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.416.0.min.js"></script>
+    <script type="text/javascript" src="node_modules/amazon-cognito-identity-js/dist/amazon-cognito-identity.min.js"></script>
+    <script type="text/javascript" src="node_modules/amazon-cognito-auth-js/dist/amazon-cognito-auth.min.js"></script>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" href="favicon.ico" type="image/gif" sizes="16x16">
+
+</head>
+
+<body>
+    <div class="chat-header">
+        <h1>Dining Concierge Bot</h1>
+    </div>
+
+    <div id="chat-scroll">
+        <div class="chat-output" id="chat-output">
+            <div class="user-message">
+                <!-- <div class="message">Hi! What do you want to eat today?</div> -->
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <form action="#0" id="user-input-form">
+                <input type="text" id="user-input" class="user-input" placeholder="Type your message here...">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
