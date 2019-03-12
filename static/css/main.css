@@ -30,14 +30,14 @@ body {
 .chat-output > div {
     margin: 0 0 20px 0;
 }
-.chat-output .user-message .message {
+.chat-output .bot-message .message {
     background: #ff85a2;
     color: white;
 }
-.chat-output .bot-message {
+.chat-output .user-message {
     text-align: right;
 }
-.chat-output .bot-message .message {
+.chat-output .user-message .message {
     background: #eee;
 }
 .chat-output .message {
