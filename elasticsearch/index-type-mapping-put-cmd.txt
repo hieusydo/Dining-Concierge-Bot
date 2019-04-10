@@ -1,0 +1,15 @@
+PUT restaurants
+{
+    "mappings": {
+        "Restaurant": {
+            "properties":{
+                "RestaurantID": {
+                    "type": "text"
+                },
+                "Cuisine": {
+                    "type": "text"
+                }
+            }
+        }
+    }
+}
