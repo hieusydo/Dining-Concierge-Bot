@@ -3,6 +3,8 @@
     Handle Lex DiningConciergeBot
     Based on hotel booking bot template
 
+    LF1
+
 """
 
 import json
@@ -11,6 +13,7 @@ import time
 import os
 import dateutil.parser
 import logging
+import boto3
 
 from botocore.vendored import requests
 
@@ -70,6 +73,7 @@ def validate_dining(slots):
     dining_date = try_ex(lambda: slots['diningDate'])
     dining_time = try_ex(lambda: slots['diningTime'])
     num_people = try_ex(lambda: slots['numPeople'])
+    phone_num = try_ex(lambda: slots['phoneNum'])
 
     # Validate party size
     if num_people and not (0 < int(num_people) < 51):
@@ -98,6 +102,13 @@ def validate_dining(slots):
                 False,
                 'diningTime',
                 'You cannot go back in time!'
+            )
+
+    if phone_num and (phone_num.startswith('+1') is False or len(phone_num) != 12):
+        return build_validation_result(
+                False,
+                'phoneNum',
+                'Phone number must follow format +1XXXXXXXXXX'
             )
 
     return {'isValid': True}
@@ -228,6 +239,94 @@ def thank(intent_request):
         }
     )
 
+def suggest_dining_sqs(intent_request):
+    slots = intent_request['currentIntent']['slots']
+    location = try_ex(lambda: slots['location'])
+    cuisine = try_ex(lambda: slots['cuisine'])
+    dining_date = try_ex(lambda: slots['diningDate'])
+    dining_time = try_ex(lambda: slots['diningTime'])
+    num_people = try_ex(lambda: slots['numPeople']) # not supported by Yelp API
+    phone_num = try_ex(lambda: slots['phoneNum'])
+
+    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+
+    # Load confirmation history and track the current reservation.
+    reservation = json.dumps({
+        'location': location,
+        'cuisine': cuisine,
+        'diningDate': dining_date,
+        'diningTime': dining_time,
+        'numPeople': num_people,
+        'phoneNum': phone_num
+    })
+
+    session_attributes['currentReservation'] = reservation
+
+    if intent_request['invocationSource'] == 'DialogCodeHook':
+        # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
+        validation_result = validate_dining(intent_request['currentIntent']['slots'])
+        if not validation_result['isValid']:
+            slots[validation_result['violatedSlot']] = None
+            return elicit_slot(
+                session_attributes,
+                intent_request['currentIntent']['name'],
+                slots,
+                validation_result['violatedSlot'],
+                validation_result['message']
+            )
+
+        session_attributes['currentReservation'] = reservation
+        return delegate(session_attributes, intent_request['currentIntent']['slots'])
+
+    # New for HW2: Send message to SQS queue
+    sqs = boto3.client('sqs')
+    queue_url = 'https://sqs.us-east-1.amazonaws.com/307836514159/diningSuggestion'
+    response = sqs.send_message(
+        QueueUrl=queue_url,
+        DelaySeconds=10,
+        MessageAttributes={
+            'Location': {
+                'DataType': 'String',
+                'StringValue': location
+            },
+            'DiningDate': {
+                'DataType': 'String',
+                'StringValue': dining_date
+            },
+            'DiningTime': {
+                'DataType': 'String',
+                'StringValue': dining_time
+            },
+            'NumPeople': {
+                'DataType': 'String',
+                'StringValue': num_people
+            },
+            'Cuisine': {
+                'DataType': 'String',
+                'StringValue': cuisine
+            },
+            'PhoneNum': {
+                'DataType': 'String',
+                'StringValue': phone_num
+            }
+        },
+        MessageBody=(
+            'Restaurant suggestion'
+        )
+    )
+    logger.debug("Put into Queue succeeded. MessageId: %s" % response['MessageId'])
+
+    reply = 'You’re all set. Expect my suggestions shortly! Have a good day.'
+    return close(
+        session_attributes,
+        'Fulfilled',
+        {
+            'contentType': 'PlainText',
+            'content': reply
+        }
+    )
+
+
 def dispatch(intent_request):
     """
     Called when the user specifies an intent for this bot.
@@ -241,7 +340,7 @@ def dispatch(intent_request):
     if intent_name == 'Greet':
         return greet(intent_request)
     elif intent_name == 'SuggestDining':
-        return suggest_dining(intent_request)
+        return suggest_dining_sqs(intent_request)
     elif intent_name == 'ThankYou':
         return thank(intent_request)
 
