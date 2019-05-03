@@ -48,11 +48,11 @@ def poll_from_queue():
         logger.debug('Received and deleted message: %s' % message)
     except KeyError:
         logger.debug("Empty queue")
-        return (cuisine, phone_num)
+        return (cuisine, phone_num, location, dining_date, dining_time, num_people)
 
     if message is None:
         logger.debug("Empty message")
-        return (cuisine, phone_num)
+        return (cuisine, phone_num, location, dining_date, dining_time, num_people)
 
     try:
         cuisine = message["MessageAttributes"]["Cuisine"]["StringValue"]
@@ -92,8 +92,7 @@ def lambda_handler(event, context):
     for rest in raw_result:
         all_rest_ids.append(rest["_id"])
 
-    # TODO: Here are my suggestions for {cuisine} food in {location} on {diningDate} at {diningTime} for {numPeople} people:
-    response_sns_text = 'Here are my suggestions for {cuisine} food in {location} on {diningDate} at {diningTime} for {numPeople} people:'.format(
+    response_sns_text = 'Here are my suggestions for {cuisine} food in {location} on {diningDate} at {diningTime} for {numPeople} people: '.format(
             cuisine=cuisine,
             location=location,
             diningDate=dining_date,
@@ -132,5 +131,7 @@ def lambda_handler(event, context):
         Message=response_sns_text,
         MessageStructure='string',
     )
+
+    logger.debug("Message '%s' sent to %s" % (response_sns_text, phone_num))
 
     return response_sns_text
